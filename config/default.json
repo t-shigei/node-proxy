@@ -1,0 +1,19 @@
+{
+  "listenPort":83,
+  "excludeHost":["127\\.0\\.0\\.1",
+             "localhost",
+             "google-analytics\\.com",
+             "googleapis\\.com",
+             "gstatic\\.com",
+             "gvt.*\\.com",
+             "facebook\\.com",
+             "twitter\\.com",
+             "mixi\\.jp",
+             "google\\.com",
+             "google\\.co\\.jp",
+             "cloudflare\\.com",
+             "nakanohito\\.jp",
+             "adobe\\.com",
+             "doubleclick\\.net"],
+   "excludeExt":["jpg","jpeg","gif","png","ico","css","js","woff","woff2","ttf"]
+}

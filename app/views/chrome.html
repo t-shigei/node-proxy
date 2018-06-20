@@ -1,0 +1,166 @@
+<script>
+    //debug用
+    //# sourceURL=dynamicScript-chrome.js
+    $(function() {
+      Split(['#split1', '#split2', '#split3'], {
+        sizes: [30, 40,30],
+      });
+
+      Split(['#split4', '#split5'], {
+          direction: 'vertical',
+          sizes: [40, 60],
+          onDragEnd: function () {
+              js_editor.resize();
+              js_result.resize();
+          }
+      });
+
+
+				var req_editor = createEditor("req","ace/mode/text");
+				var res_editor = createEditor("res","ace/mode/html");
+        var js_editor = createEditor("js","ace/mode/javascript");
+        var js_result = createEditor("js_result","ace/mode/json");
+
+
+
+        var server = new Vue({
+            el: ".state",
+            data: {
+                port: "",
+                active: false,
+                check_proxy:false
+            },
+            computed: {
+                state: function() {
+                    return this.active ? "起動中" : "停止中";
+                },
+                class_state: function() {
+                    return this.active ? "label-success" : "label-danger";
+                },
+            },
+            methods: {
+								browser: function(){
+									socket.emit('browser',{port: this.port,proxy:this.check_proxy});
+								},
+                use_proxy: function(ev){
+                  socket.emit('set_proxy',{port: this.port,proxy:this.check_proxy});
+                }
+            }
+        });
+
+
+        socket.emit('init');
+        socket.on('state', function(data) {
+            server.port = data.port;
+            server.active = data.isActive;
+        });
+
+        $(".request").click(function(){
+          socket.emit('navigate', {url:$(".url").val(),
+                                    method:$(".method").val(),
+                                    headers:req_editor.getValue()});
+          return false;
+        });
+        socket.on('response', function(ret) {
+          $(".req_msg").text(ret.err ? ret.err : "");
+          $(".frame_id").val(ret.frameId);
+          if(ret.body) res_editor.setValue(ret.body);
+        });
+
+        $(".script").click(function(){
+          socket.emit('run_js', {js:js_editor.getValue()});
+          return false;
+        });
+        socket.on('js_response', function(ret) {
+          js_result.setValue(ret.result);
+        });
+
+        $(".rewrite").click(function(){
+          socket.emit('rewrite', {frameId: $(".frame_id").val(),html:res_editor.getValue()});
+          return false;
+        });
+
+
+
+/////////////sample
+        $(".url").val("https://www.mbsd.co.jp/");
+        $(".method").val("GET");
+
+        var aa ="host:www.mbsd.co.jp\n" +
+                "user-agent:Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36\n"+
+                "accept:*/*\n"+
+                "referer:https://www.mbsd.co.jp/\n"+
+                "accept-encoding:gzip, deflate, br\n"+
+                "accept-language:ja,en-US;q=0.9,en;q=0.8\n"+
+                "cookie:\n";
+        req_editor.setValue(aa);
+
+
+
+        var js ='var list = [];\n'+
+                'var i=1;\n'+
+                '$$("a").forEach((item)=>{\n'+
+                '    list.push(item.href);\n'+
+                '    i++;\n'+
+                '    setTimeout(function(){\n'+
+                '        var ev = new MouseEvent("click", {\n'+
+                '                view: window,\n'+
+                '                bubbles: true,\n'+
+                '                cancelable: true,\n'+
+                '                ctrlKey: true\n'+
+                '            });\n'+
+                '        item.dispatchEvent(ev);\n'+
+                '    },(i*3000)); \n'+
+                '});\n'+
+                'list//output\n';
+
+        js_editor.setValue(js);
+    });
+</script>
+
+
+
+<div class="row state" style="border:solid gray 1px;padding: 3px;">
+    <div class="col-xs-12">
+
+      <button class="btn btn-black" @click="browser">ブラウザ起動</button>
+      Proxyを利用する <input type="checkbox" v-model="check_proxy" @click="use_proxy" >
+      状態:<span class="label" :class="class_state">{{state}}</span>
+      Proxyポート:<span class="label" >{{port}}</span>
+    </div>
+</div>
+
+<div class="row" style="height:95%;">
+  <div id="split1" class="split split-horizontal ">
+
+        <div>
+        URL<button class="btn btn-black btn-xs request" >Request送信</button>
+        </div>
+        <span class="req_msg" style="color:red;"></span>
+        <textarea style="width:100%;height:60px;background:black;color:white;" class="url"></textarea>
+        <div>Method
+        <input type="text" style="width:100px;background:black;color:white;" class="method" value="GET">
+        </div>
+        <div>Headers&amp;Body</div>
+        <div style="height:83%;" id="req" ></div>
+  </div>
+  <div id="split2" class="split split-horizontal">
+    <div>
+      Response
+      <button class="btn btn-black btn-xs rewrite" >書き換え</button>
+    </div>
+    <input type="hidden" class="frame_id">
+    <div id="res" style="height:98%;"></div>
+  </div>
+  <!-- script -->
+  <div id="split3" class="split split-horizontal ">
+    <div id="split4" style="height:100%;">
+        <button class="btn btn-black btn-xs script" >Script実行</button>
+        <div id="js" style="height:90%;"></div>
+    </div>
+    <div id="split5">
+        <label>Result</label>
+         <div id="js_result" style="height:95%;"></div>
+    </div>
+  </div>
+</div>

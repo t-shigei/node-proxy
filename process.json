@@ -1,0 +1,18 @@
+{
+  apps : [{
+    name        : "proxy",
+    script      : "./app/app.js",
+    instances  : 1,
+    error_file : "./tmp/err.log",
+    out_file   : "./tmp/out.log",
+    pid_file   : "./tmp/app.pid",
+    watch       : ["app"],
+    exec_mode  : "fork",
+    env: {
+      "NODE_ENV": "development"
+    },
+    env_production : {
+       "NODE_ENV": "production"
+    }
+  }]
+}

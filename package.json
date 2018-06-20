@@ -1,0 +1,33 @@
+{
+  "name": "mbsd-proxy",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "dependencies": {
+    "body-parser": "*",
+    "cookie-parser": "*",
+    "ejs": "*",
+    "express": "*",
+    "pem": "*",
+    "pm2": "*",
+    "socket.io": "*",
+    "config": "*",
+    "nedb ": "*",
+    "jsonschema": "*",
+    "iconv-lite": "*",
+    "chrome-remote-interface":"*",
+    "js-beautify":"*",
+
+    "sqlite3":"*"
+  },
+  "devDependencies": {
+    "node-dev": "*"
+  },
+  "scripts": {
+    "test": "node-dev --inspect app/app.js",
+    "start": "pm2 start process.json",
+    "stop": "pm2 kill"
+  },
+  "author": "t.shigei",
+  "license": "MIT"
+}

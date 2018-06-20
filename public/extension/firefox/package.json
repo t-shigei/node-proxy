@@ -1,0 +1,13 @@
+{
+  "name": "web-crawler",
+  "title": "WebCrawler",
+  "id": "proxy@d.mbsd.jp",
+  "description": "WebCrawler",
+  "author": "mbsd",
+  "license": "MIT",
+  "version": "1.0.0",
+  "main": "main.js",
+  "permissions": {
+    "cross-domain-content": ["http://172.16.65.110"]
+   }
+}

@@ -1,0 +1,36 @@
+{
+  "manifest_version": 2,
+  "name": "mbsp",
+  "version": "1.0.2",
+
+  "description": "MBSD Proxy Setting",
+  "icons": {
+       "16": "icons/icon.png",
+       "48": "icons/icon.png",
+       "128": "icons/icon.png"
+  },
+  "browser_action": {
+    "default_icon": "icons/icon.png",
+    "default_title": "CustomProxy",
+     "default_popup": "setting.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["js/content-script.js"]
+    }
+  ],
+      "background": {
+        "scripts": ["js/background.js"],
+        "presistent": false
+    },
+  "author": "t.shigei",
+
+
+  "permissions": [
+	"tabs",
+    "proxy",
+	"<all_urls>"
+  ]
+
+}

@@ -1,0 +1,118 @@
+
+	<div style="margin: 10px;" class="row">
+		<div class="col-md-offset-3 col-md-9"><h3><%=datapath%></h3></div>
+		<form class="form-horizontal" >
+			<div class="col-md-offset-1 col-md-2" style="font-size: 18px;">
+				<h4>Table一覧</h4>
+				<ul class="form-group tables" style="list-style-type:none;padding-left:20px;">
+				</ul>
+
+			</div>
+			<div  class="col-md-8">
+				<div  class="row">
+					<div class="form-group ">
+						<label>SQL </label>
+						<textarea class="form-control sql" style="font-size: 20px;height:80px;"  name="sql" ></textarea>
+					</div>
+					<div class="form-group ">
+						<button class="btn btn-primary exec">実行</button>
+					</div>
+				</div>
+				<div class="row">
+					<label>結果</label>
+					<div id="result" style="height:300px;" ></div>
+				</div>
+			</div>
+
+	  </form>
+	</div>
+
+
+<script>
+$(function(){
+
+	var socket = io( { path: '/sql'});//io.connect("http://localhost:3000/sql");
+  var callback_func={};
+	socket.on('result',function(data){
+		if(callback_func[data.token]) callback_func[data.token](data);
+	});
+
+
+  socket.emit("exec",{sql:"select * from sqlite_master where type='table'",
+						       		token:"tables"});
+
+  callback_func.tables=function(data){
+		var tb="";
+		$.each(data.result,function(){
+			tb += '<li><a href="" data-table="'+this.tbl_name +'">'+this.tbl_name +'</a></li>';
+		});
+		$(".tables").append(tb);
+	};
+
+
+
+	var grid = new wijmo.grid.FlexGrid('#result');
+	grid.initialize({
+		columns: [
+      { header: 'col', binding: '', width: '*', align: 'center'}
+    ],
+	  isReadOnly: true,
+		itemsSource: []
+	});
+
+
+	callback_func.cols=function(data){
+		$.each(data.result,function(){
+			 var col = new wijmo.grid.Column({
+										    header: this.name,
+						            binding: this.name,
+						             align: 'center'
+						        });
+			grid.columns.push(col);
+		});
+	};
+	callback_func.tabledata=function(data){
+		grid.itemsSource = data.result;
+		if(data.err)alert(data.err);
+	};
+
+
+  $(".tables").on("click","a",function(){
+		grid.columns.clear();
+		grid.itemsSource = [];
+    grid.autoGenerateColumns=false;
+		grid.isReadOnly=false;
+		grid.allowAddNew=true;
+		grid.allowDelete=true;
+		var tbl_name=$(this).data("table");
+    socket.emit("exec",
+		         {sql:"PRAGMA table_info('"+tbl_name+"')",
+		         token:"cols"})
+	 socket.emit("exec",
+		         {sql:"select ROWID,* from "+tbl_name,
+		         token:"tabledata"})
+		 return false;
+
+	});
+
+	$(".exec").click(function(){
+		grid.columns.clear();
+    grid.autoGenerateColumns=true;
+		grid.isReadOnly=true;
+		grid.allowAddNew=false;
+		grid.allowDelete=false;
+		var tbl_name=$(this).data("table");
+    socket.emit("exec",
+		         {sql:$(".sql").val(),
+		         token:"tabledata"})
+		 return false;
+	});
+
+
+
+
+
+
+
+});
+</script>

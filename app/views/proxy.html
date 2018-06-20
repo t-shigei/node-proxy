@@ -1,0 +1,184 @@
+<script>
+    //debug用
+    //# sourceURL=dynamicScript-top.js
+    $(function() {
+
+        //$('#right-left').enhsplitter({onDragEnd:function(){grid.refresh();}});
+        //$('#top-bottom').enhsplitter({vertical: false});
+        Split(['#right-left1', '#right-left2'], {
+          sizes: [70, 30],
+        });
+        Split(['#top-bottom1', '#top-bottom2'], {
+          direction: 'vertical',
+          sizes: [30, 60],
+        });
+
+        var server = new Vue({
+            el: ".state",
+            data: {
+                port: "",
+                block: false,
+                active: false
+            },
+						watch: {
+								block: function(newVal, oldVal) {
+										socket.emit('block',newVal);
+								}
+						},
+            computed: {
+                state: function() {
+                    return this.active ? "起動中" : "停止中";
+                },
+                class_state: function() {
+                    return this.active ? "label-success" : "label-danger";
+                },
+            },
+            methods: {
+                start: function() {
+                    var self = this;
+                    socket.emit('start', {
+                        block: self.block,
+                        port: self.port
+                    });
+                },
+								stop: function() {
+                    socket.emit('stop');
+                },
+								resume: function(){
+									socket.emit('resume');
+								},
+								clear: function(){
+									socket.emit('clear');
+								},
+								excel: function(){
+                  wijmo.grid.xlsx.FlexGridXlsxConverter.save(grid,{includeCellStyles: false}, 'proxy.xlsx');
+								}
+            }
+        });
+        var status_color = {
+            0: "<div class='wait_state'>待機</div>",
+            1: "<div class='finish_state'>終了</div>",
+            9: "<div class='error_state'>中断</div>"
+        };
+        var source = new wijmo.collections.CollectionView([]);
+        var grid = new wijmo.grid.FlexGrid('#result');
+        grid.initialize({
+            autoGenerateColumns: false,
+						//allowResizing:true,
+						//allowSorting:true,
+						selectionMode:3,
+            columns: [
+							{header: 'state',binding: 'state',width:80,align: 'center'},
+							{header: 'start',binding: 'start',width:120,align: 'left'},
+							{header: 'code',binding: 'res_code',width:50,align: 'center'},
+							{header: 'method',binding: 'method',width:70,align: 'center'},
+							{header: 'ssl',binding: 'protocol',width:30,align: 'center'},
+              {header: 'host',binding: 'host',width: '*',align: 'left'},
+              {header: 'path',binding: 'path',width: '*',align: 'left'},
+              {header: 'content_type',binding: 'content_type',width: '*',align: 'left'},
+
+              {header: 'byte',binding: 'res_byte',width:60,align: 'right'},
+              {header: 'latency',binding: 'latency',width:60,align: 'right'}
+            ],
+            itemFormatter: function(panel, r, c, cell) {
+                if (wijmo.grid.CellType.Cell === panel.cellType) {
+                    if (c === 0) {
+                        var stat = panel.rows[r].dataItem.state;
+                        cell.innerHTML = status_color[stat];
+                    } else if (c === 4) {
+											  var P = panel.rows[r].dataItem.protocol;
+                        cell.innerHTML = P === "https:" ? "<div class='check_img'></div>" : "";
+                    }
+                }
+            },
+            itemsSource: source,
+						selectionChanged: function (e, args) {
+							if(args.row>=0){
+								var data = args.panel.rows[args.row].dataItem;
+	              $(".url").val(data.url);
+								//if(data.state===1){
+									socket.emit('response',data._id);
+								//}
+							}
+        		}
+        });
+        var filter = new wijmo.grid.filter.FlexGridFilter(grid);
+
+        socket.emit('init');
+				socket.on('update', function(rec) {
+            var tmp = source.sourceCollection;
+            var idx = tmp.findIndex(function(r){return r._id === rec._id});
+            if (idx >= 0) {tmp[idx] = rec}
+						else {tmp.push(rec)}
+            source.refresh();
+        });
+        socket.on('data', function(data) {
+						source.sourceCollection=data;
+            source.refresh();
+        });
+
+        socket.on('state', function(data) {
+            server.block = data.block;
+            server.port = data.port || "8888";
+            server.active = data.isActive;
+        });
+
+				socket.on('response', function(data) {
+            req_editor.setValue(data.req,-1);
+            res_editor.setValue(data.res,-1);
+        });
+        socket.on('disconnect', function(data) {
+          setTimeout("location.reload()",3000);
+        });
+
+				var req_editor = createEditor("req","ace/mode/asciidoc");
+				var res_editor = createEditor("res","ace/mode/html");
+
+
+
+    });
+</script>
+
+
+
+<div class="row state" style="border:solid gray 1px;padding: 3px;">
+    <div class="col-xs-4">
+        <button class="btn btn-black" @click="clear">All Clear</button>
+        <button class="btn btn-black" @click="resume">Continue</button>
+        <button class="btn btn-black" @click="excel">Excel出力</button>
+        Block:<input type="checkbox" v-model="block">
+    </div>
+    <div class="col-xs-1"></div>
+    <div class="col-xs-5">
+        <button class="btn btn-black" v-show="!active" @click="start">起動</button>
+        <button class="btn btn-black" v-show="active" @click="stop">停止</button>
+				状態:<span class="label" :class="class_state">{{state}}</span>
+				Proxyポート:<input type="text" :disabled="active" v-model="port" style="width:100px;">
+    </div>
+    <div class="col-xs-2">
+
+    </div>
+</div>
+
+<div class="row" style="height:95%;">
+
+        <div id="right-left1" class="split split-horizontal">
+            <div id="result" style="height:95%;font-size: 70%;"></div>
+        </div>
+        <div id="right-left2" class="split split-horizontal">
+
+              <label>URL</label>
+              <div ><input type="text" style="width:100%;background:black;color:white;" class="url"></div>
+              <label>Request</label>
+							<!--button class="btn btn-xs btn-warning req-edit">保存</button-->
+              <div id="top-bottom1">
+                  <div id="req" style="width:100%;height:98%;"></div>
+              </div>
+              <div id="top-bottom2">
+                  <label>Response</label>
+                  <div id="res" style="width:100%;height:90%;"></div>
+              </div>
+        </div>
+
+
+</div>

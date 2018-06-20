@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>setting</title>
+</head>
+<body>
+<form style="width:500px;">
+    <fieldset>
+        <legend>設定</legend>
+        <div class="container">
+            <div class="row">
+                <input type="checkbox" name="run" value="on" /> <label for="hash" title='href="#"'>Proxyを使用する</label>
+            </div>
+            <div class="row">
+                <input style="width:450px;" type="text" name="proxy" class="proxy" value=""/>
+            </div>
+            <div class="row">
+        <div>対象ドメイン</div>
+        <textarea name="except" style="width:450px;height:100px;">*</textarea>
+            </div>
+        </div>
+
+        <button class="save" >保存</button>
+    </fieldset>
+</form>
+
+<script src="js/jquery.js"></script>
+<script src="js/setting.js"></script>
+</body>
+</html>
