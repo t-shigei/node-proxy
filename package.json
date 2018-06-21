@@ -12,13 +12,11 @@
     "pm2": "*",
     "socket.io": "*",
     "config": "*",
-    "nedb ": "*",
+    "nedb": "*",
     "jsonschema": "*",
     "iconv-lite": "*",
     "chrome-remote-interface":"*",
-    "js-beautify":"*",
-
-    "sqlite3":"*"
+    "js-beautify":"*"
   },
   "devDependencies": {
     "node-dev": "*"
