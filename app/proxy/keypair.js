@@ -20,9 +20,9 @@ const sig ={
   country:"JP",
   state:"Tokyo",
   locality:"Akasaka",
-  organization:"MBSD",
-  organizationUnit:"PS",
-  emailAddress :"proxy@d.mbsd.jp",
+  organization:"EXAMPLE",
+  organizationUnit:"Cust",
+  emailAddress :"proxy@example.com",
 };
 const x509 ={
   serviceKey:fs.readFileSync('proxy.key'),
