@@ -21,7 +21,7 @@ const sig ={
   state:"Tokyo",
   locality:"Akasaka",
   organization:"EXAMPLE",
-  organizationUnit:"Cust",
+  organizationUnit:"Cus",
   emailAddress :"proxy@example.com",
 };
 const x509 ={
